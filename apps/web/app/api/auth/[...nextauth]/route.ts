@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import type { DefaultSession } from 'next-auth';
+import db from '@repo/db'
 
 declare module 'next-auth' {
   interface Session {
@@ -25,18 +26,40 @@ const handler = NextAuth({
     })
   ],
   callbacks: {
-    jwt: ({ token, account }) => {
-      if (account?.access_token) {
-        token.access_token = account.access_token;
-      }
+    async signIn({ user, account }) {
+      await db.user.upsert({
+        where: {
+          userId: user.id
+        },
+        update: {
+          access_token: account?.access_token
+        },
+        create: {
+          userId: user.id,
+          //@ts-ignore
+          access_token: account?.access_token
+        }
+      })
+      return true
+    },
+    jwt: async ({ token, account, profile }) => {
+      const user = await db.user.findFirst({
+        where: {
+          userId: token.sub
+        }
+      })
+      if (user?.access_token) token.access_token = user.access_token;
       return token;
     },
     session: async ({ session, token }) => {
-      if (typeof (token.access_token) !== 'string' || typeof (token.id) !== 'string') {
-        return session
-      }
-      session.accessToken = token.access_token;
-      session.user.id = token.id;
+      const user = await db.user.findFirst({
+        where: {
+          userId: token.sub
+        }
+      })
+      if (user?.access_token) session.accessToken = user.access_token;
+      //@ts-ignore
+      session.user.id = token.sub;
       return session
     },
   }

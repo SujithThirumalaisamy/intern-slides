@@ -9,10 +9,18 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
+    "@repo/db": "workspace:*",
     "@repo/ui": "workspace:*",
+    "axios": "^1.7.2",
+    "filesystem": "^1.0.1",
+    "fs": "0.0.1-security",
+    "googleapis": "^140.0.0",
+    "net": "^1.0.2",
     "next": "^14.0.4",
     "next-auth": "^4.24.7",
     "next-themes": "^0.3.0",
+    "openai": "^4.49.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -2,121 +2,45 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@repo/ui/components/ui/dropdown-menu"
-import { Button } from "@repo/ui/components/ui/button"
 import { Input } from "@repo/ui/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@repo/ui/components/ui/avatar"
-import ArchiveIcon from "./components/archive-icon"
-import InboxIcon from "./components/inbox-icon"
-import SendIcon from "./components/send-icon"
-import FileIcon from "./components/file-icon"
-import Trash2Icon from "./components/trash-2-icon"
-import UsersIcon from "./components/users-icon"
-import MenuIcon from "./components/menu-icon"
-import SearchIcon from "./components/search-icon"
-import CombineIcon from "./components/combine-icon"
+import InboxIcon from "./components/icons/inbox-icon"
+import SendIcon from "./components/icons/send-icon"
+import FileIcon from "./components/icons/file-icon"
+import Trash2Icon from "./components/icons/trash-2-icon"
+import UsersIcon from "./components/icons/users-icon"
+import MenuIcon from "./components/icons/menu-icon"
+import SearchIcon from "./components/icons/search-icon"
+import CombineIcon from "./components/icons/combine-icon"
 import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
+import { Category, Email, fetchMails, formatDateAsTime } from "./utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@repo/ui/components/ui/dropdown-menu"
+import { Button } from "@repo/ui/components/ui/button"
+import ArchiveIcon from "./components/icons/archive-icon"
 
 export default function Home() {
   const { data: session, status } = useSession()
-  if (status !== "authenticated" && status !== 'loading') {
-    redirect(`/api/auth/signin?callback=${encodeURIComponent(process.env.NEXTAUTH_URL || "")}`)
+  if (status !== "authenticated" && status !== "loading") {
+    redirect(`/api/auth/signin?callback=${encodeURIComponent(process.env.NEXTAUTH_URL || "")}`);
   }
-  console.log(session);
-  const [emails, setEmails] = useState([
-    {
-      id: 1,
-      from: "John Smith",
-      subject: "Re: Project Update",
-      body: "Hi team, I wanted to provide an update on the project progress. We're on track to deliver the first phase by the end of the month. Let me know if you have any questions.",
-      date: "2 days ago",
-      category: "Important",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "John Smith",
-      avatarInitials: "JS",
-    },
-    {
-      id: 2,
-      from: "Sarah Adams",
-      subject: "New Design Feedback",
-      body: "Hi everyone, I've reviewed the new design mockups and have some feedback to share. Let's discuss during our next meeting.",
-      date: "1 week ago",
-      category: "Important",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Sarah Adams",
-      avatarInitials: "SA",
-    },
-    {
-      id: 3,
-      from: "Michael Johnson",
-      subject: "Quarterly Report",
-      body: "Hi team, attached is the quarterly report for your review. Please let me know if you have any questions or need additional information.",
-      date: "3 days ago",
-      category: "General",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Michael Johnson",
-      avatarInitials: "MJ",
-    },
-    {
-      id: 4,
-      from: "Olivia Williams",
-      subject: "Invitation: Team Offsite",
-      body: "Hi everyone, I'd like to invite you all to our upcoming team offsite on June 15th. We'll be discussing our roadmap and planning for the next quarter. Please RSVP by June 10th.",
-      date: "1 day ago",
-      category: "Important",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Olivia Williams",
-      avatarInitials: "OW",
-    },
-    {
-      id: 5,
-      from: "Acme Deals",
-      subject: "50% off sale this weekend!",
-      body: "Don't miss our biggest sale of the year! Get 50% off all products this weekend only.",
-      date: "2 hours ago",
-      category: "Promotions",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Acme Deals",
-      avatarInitials: "AD",
-    },
-    {
-      id: 6,
-      from: "Facebook",
-      subject: "New friend request",
-      body: "You have a new friend request from Jane Doe. Click here to view.",
-      date: "1 hour ago",
-      category: "Social",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Facebook",
-      avatarInitials: "FB",
-    },
-    {
-      id: 7,
-      from: "Marketing Team",
-      subject: "New product launch newsletter",
-      body: "Check out our latest product launch and get exclusive early access.",
-      date: "1 day ago",
-      category: "Marketing",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Marketing Team",
-      avatarInitials: "MT",
-    },
-    {
-      id: 8,
-      from: "Spam Sender",
-      subject: "You won a free vacation!",
-      body: "Click here to claim your free vacation. This is not a scam.",
-      date: "5 minutes ago",
-      category: "Spam",
-      avatarSrc: "/placeholder-user.jpg",
-      avatarAlt: "Spam Sender",
-      avatarInitials: "SS",
-    },
-  ])
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const filteredEmails =
-    selectedCategory === "All" ? emails : emails.filter((email) => email.category === selectedCategory)
+  const [emails, setEmails] = useState<Email[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<Category | "All">("All");
+  const filteredEmails = selectedCategory === "All" ? emails : emails.filter((email) => email.category === selectedCategory)
+  useEffect(() => {
+    var accessToken = localStorage.getItem("not_google_access_token") || null;
+    var userId = localStorage.getItem("not_google_userId") || null;
+    if (session) {
+      localStorage.setItem("not_google_access_token", session.accessToken);
+      localStorage.setItem("not_google_userId", session.user.id);
+    }
+    if (!userId || !accessToken) {
+      redirect(`/api/auth/signin?callback=${encodeURIComponent(process.env.NEXTAUTH_URL || "")}`);
+    }
+    //@ts-ignore
+    fetchMails({ userId, accessToken }).then((emailMetadata): Email[] => setEmails(emailMetadata))
+  }, [session?.accessToken]);
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <div className="hidden w-64 flex-col border-r bg-gray-100 dark:border-gray-800 dark:bg-gray-900 md:flex">
@@ -198,44 +122,44 @@ export default function Home() {
                 All
               </Button>
               <Button
-                variant={selectedCategory === "Important" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Important ? "ghost" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("Important")}
+                onClick={() => setSelectedCategory(Category.Important)}
               >
                 Important
               </Button>
               <Button
-                variant={selectedCategory === "Promotions" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Promotions ? "ghost" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("Promotions")}
+                onClick={() => setSelectedCategory(Category.Promotions)}
               >
                 Promotions
               </Button>
               <Button
-                variant={selectedCategory === "Social" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Social ? "ghost" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("Social")}
+                onClick={() => setSelectedCategory(Category.Social)}
               >
                 Social
               </Button>
               <Button
-                variant={selectedCategory === "Marketing" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Marketing ? "ghost" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("Marketing")}
+                onClick={() => setSelectedCategory(Category.Marketing)}
               >
                 Marketing
               </Button>
               <Button
-                variant={selectedCategory === "Spam" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Spam ? "ghost" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("Spam")}
+                onClick={() => setSelectedCategory(Category.Spam)}
               >
                 Spam
               </Button>
               <Button
-                variant={selectedCategory === "General" ? "ghost" : "outline"}
+                variant={selectedCategory === Category.Spam ? "ghost" : "outline"}
+                onClick={() => setSelectedCategory(Category.General)}
                 className="w-full justify-start"
-                onClick={() => setSelectedCategory("General")}
               >
                 General
               </Button>
@@ -271,15 +195,15 @@ export default function Home() {
             {filteredEmails.map((email) => (
               <article
                 key={email.id}
-                className={`flex items-start gap-4 rounded-md border p-4 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${email.category === "Important"
+                className={`flex items-start gap-4 rounded-md border p-4 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${email.category === Category.Important
                   ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-900"
-                  : email.category === "Promotions"
+                  : email.category === Category.Promotions
                     ? "border-yellow-500 bg-yellow-50 dark:border-yellow-500 dark:bg-yellow-900"
-                    : email.category === "Social"
+                    : email.category === Category.Social
                       ? "border-green-500 bg-green-50 dark:border-green-500 dark:bg-green-900"
-                      : email.category === "Marketing"
+                      : email.category === Category.Marketing
                         ? "border-purple-500 bg-purple-50 dark:border-purple-500 dark:bg-purple-900"
-                        : email.category === "Spam"
+                        : email.category === Category.Spam
                           ? "border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-900"
                           : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
                   }`}
@@ -294,8 +218,8 @@ export default function Home() {
                   <div className="flex items-center justify-between">
                     <div className="font-medium">{email.from}</div>
                     <div className="flex items-center gap-2">
-                      <div className="text-xs">{email.category}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{email.date}</div>
+                      {formatDateAsTime(email.date)}
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{formatDateAsTime(email.date)}</div>
                     </div>
                   </div>
                   <div className="text-sm font-medium">{email.subject}</div>
