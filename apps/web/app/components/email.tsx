@@ -1,8 +1,8 @@
 import React from 'react'
-import { Category, Email } from '../utils'
+import { Category, EmailType } from '../utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
 
-export default function EmailItem({ email }: { email: Email }) {
+export default function EmailItem({ email }: { email: EmailType }) {
   return (
 
     <article
