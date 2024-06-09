@@ -8,7 +8,7 @@
 Clone the repository:
 
 ```sh
-git clone [https://github.com/dan5py/turborepo-shadcn-ui.git](https://github.com/SujithThirumalaisamy/intern-slides.git)
+git clone https://github.com/SujithThirumalaisamy/intern-slides.git
 ```
 
 Install dependencies:
