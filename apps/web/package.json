@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
-    "@repo/db": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@repo/db": "*",
+    "@repo/ui": "*",
     "axios": "^1.7.2",
     "filesystem": "^1.0.1",
     "fs": "0.0.1-security",
@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.0.4",
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
     "next": "^14.0.4",
     "@types/eslint": "^8.56.1",
     "@types/node": "^20.10.6",
